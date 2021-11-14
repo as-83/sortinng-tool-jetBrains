@@ -1,0 +1,14 @@
+/.idea/
+/gradle/
+/.gradle/
+/Sorting Tool/Sorting it out/
+/Sorting Tool/Numbers only/
+/Sorting Tool/X-files/
+/Sorting Tool/Not just numbers/
+/Sorting Tool/Everything counts/
+/Sorting Tool/Error_/
+*.yaml
+*.html
+*.class
+/gradlew.bat
+/gradlew

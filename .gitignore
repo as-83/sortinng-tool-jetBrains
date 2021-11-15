@@ -12,3 +12,5 @@
 **.class
 /gradlew.bat
 /gradlew
+/build/
+/Sorting Tool/task/build/

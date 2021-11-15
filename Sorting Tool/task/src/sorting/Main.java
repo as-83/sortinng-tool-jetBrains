@@ -1,6 +1,5 @@
 package sorting;
 
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,66 +9,53 @@ public class Main {
     public static void main(final String[] args) {
         //Command-line arguments parsing
         String dataType = "word";
-
+        String sortingType = "natural";
 
         if (args.length > 0) {
-            List<String> arguments = List.of(args);
-            if (arguments.contains("-sortIntegers")) {
-                dataType = "sortIntegers";
-            } else if (arguments.contains( "-dataType")) {
+            List<String> arguments = Arrays.asList(args);
+            if (arguments.contains("-sortingType")) {
+                int index = arguments.indexOf("-sortingType");
+                sortingType = args[index + 1];
+            }
+            if (arguments.contains( "-dataType")) {
                 int index = arguments.indexOf("-dataType");
                 dataType = args[index + 1];
             }
         }
 
-
-
         switch (dataType) {
-            case "long": longParser(); break;
-            case "word": wordParser(); break;
-            case "line": lineParser(); break;
-            case "sortIntegers": sortIntegers(); break;
+            case "long": longParser(sortingType); break;
+            case "word": wordParser(sortingType); break;
+            case "line": lineParser(sortingType); break;
             default: break;
         }
 
+        //intSortByCount(Arrays.asList(1L, 2L, 2L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 9L, 5L));// Method test
+
 
     }
 
-    private static void sortIntegers() {
-        List<Long> longList = getLongsFromInput();
-
-        Collections.sort(longList);
-        int totalNumbers = longList.size();
-        System.out.printf("Total numbers: %d.\n", totalNumbers);
-        System.out.print("Sorted data:");
-        longList.forEach(s -> System.out.print(" " + s));
-    }
-
-    private static void lineParser() {
+    private static void lineParser(String sortingType) {
         List<String> lines = new ArrayList<>();
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-           /* if (line.length() == 0) {
-                break;
-            }*/
             lines.add(line);
         }
-
-        sortStrings(lines);
-
         int totalLines = lines.size();
-        String greatestLine = lines.get(totalLines - 1);
-        long time = lines.stream().filter(l -> l.length() == greatestLine.length()).count();
+        System.out.printf("Total lines: %d.\n", totalLines);
 
-        int percents = (int) Math.round(time*100.0/totalLines);
+        if (sortingType.equals("natural")) {
+            stringsNaturalSorting(lines);
+            System.out.println("Sorted data:");
+            lines.forEach(s -> System.out.println(s));
+        } else {
+            wordsSortingByCount(lines);
+        }
 
-
-        System.out.printf("Total lines: %d.\n" +
-                "The longest line:\n" +
-                "%s\n (%d time(s), %d%%).", totalLines, greatestLine, time, percents);
+        stringsNaturalSorting(lines);
     }
 
-    private static void wordParser() {
+    private static void wordParser(String sortingType) {
         List<String> words = new ArrayList<>();
         while (scanner.hasNext("\\S+")) {
             String line = scanner.next("\\S+");
@@ -79,22 +65,29 @@ public class Main {
             words.add(line);
         }
 
-        sortStrings(words);
-
         int totalLines = words.size();
-        String greatestLine = words.get(totalLines - 1);
-        long time = words.stream().filter(l -> l.length() == greatestLine.length()).count();
+        System.out.printf("Total words: %d.\n", totalLines);
 
-        int percents = (int) Math.round(time*100.0/totalLines);
-
-
-        System.out.printf("Total words: %d.\n" +
-                "The longest word: " +
-                "%s (%d time(s), %d%%).", totalLines, greatestLine, time, percents);
+        if (sortingType.equals("natural")) {
+            stringsNaturalSorting(words);
+            System.out.print("Sorted data:");
+            words.forEach(s -> System.out.print(" " + s));
+        } else {
+            wordsSortingByCount(words);
+        }
 
     }
 
-    private static void sortStrings(List<String> words) {
+    private static void wordsSortingByCount(List<String> words) {
+
+        Map<String, Long> map =  words.stream().collect(Collectors.groupingBy(String::valueOf, Collectors.counting()));
+                map.entrySet().stream()
+                        .sorted(Map.Entry.<String, Long>comparingByValue().thenComparing(Map.Entry.comparingByKey()))
+                        .forEach((m) -> System.out.println(m.getKey() + ": " + m.getValue() +
+                        " time(s), " + Math.round(m.getValue() * 100.0 / words.size()) + "%"));
+    }
+
+    private static void stringsNaturalSorting(List<String> words) {
         Collections.sort(words, (l1, l2) -> {
             if (l1.length() != l2.length()) {
                 return l1.length() - l2.length();
@@ -105,20 +98,20 @@ public class Main {
 
     }
 
-    private static void longParser() {
+    private static void longParser(String sortingType) {
         List<Long> longList = getLongsFromInput();
-
-        Collections.sort(longList);
         int totalNumbers = longList.size();
-        long greatestNumber = longList.get(totalNumbers - 1);
-        long time = longList.stream().filter(l -> l == greatestNumber).count();
+        System.out.printf("Total numbers: %d.\n", totalNumbers);
+
+        if (sortingType.equals("natural")) {
+            intNaturalSort(longList);
+        } else {
+            intSortByCount(longList);
+        }
 
 
-        System.out.printf("Total numbers: %d.\n" +
-                "The greatest number: %d (%d time(s)).", totalNumbers, greatestNumber, time);
     }
 
-    @NotNull
     private static List<Long> getLongsFromInput() {
         List<Long> longList = new ArrayList<>();
         while (scanner.hasNextLong()) {
@@ -126,5 +119,19 @@ public class Main {
             longList.add(number);
         }
         return longList;
+    }
+
+    private static void intNaturalSort(List<Long> longList)  {
+        Collections.sort(longList);
+        System.out.print("Sorted data:");
+        longList.forEach(s -> System.out.print(" " + s));
+    }
+
+    private static void intSortByCount(List<Long> longList) {
+        longList.stream().collect(Collectors.groupingBy(Long::longValue ,Collectors.counting()))
+                .entrySet().stream()
+                .sorted(Map.Entry.<Long, Long>comparingByValue().thenComparing(Map.Entry.comparingByKey()))
+        .forEach((entry) -> System.out.println(entry.getKey() + ": " + entry.getValue() +
+                " time(s), " + Math.round(entry.getValue() * 100.0 / longList.size()) + "%"));
     }
 }

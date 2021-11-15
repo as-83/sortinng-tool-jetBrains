@@ -1,5 +1,7 @@
 package sorting;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -13,7 +15,7 @@ public class Main {
         if (args.length > 0) {
             List<String> arguments = List.of(args);
             if (arguments.contains("-sortIntegers")) {
-                dataType = "-sortIntegers";
+                dataType = "sortIntegers";
             } else if (arguments.contains( "-dataType")) {
                 int index = arguments.indexOf("-dataType");
                 dataType = args[index + 1];
@@ -26,10 +28,21 @@ public class Main {
             case "long": longParser(); break;
             case "word": wordParser(); break;
             case "line": lineParser(); break;
+            case "sortIntegers": sortIntegers(); break;
             default: break;
         }
 
 
+    }
+
+    private static void sortIntegers() {
+        List<Long> longList = getLongsFromInput();
+
+        Collections.sort(longList);
+        int totalNumbers = longList.size();
+        System.out.printf("Total numbers: %d.\n", totalNumbers);
+        System.out.print("Sorted data:");
+        longList.forEach(s -> System.out.print(" " + s));
     }
 
     private static void lineParser() {
@@ -93,11 +106,7 @@ public class Main {
     }
 
     private static void longParser() {
-        List<Long> longList = new ArrayList<>();
-        while (scanner.hasNextLong()) {
-            long number = scanner.nextLong();
-            longList.add(number);
-        }
+        List<Long> longList = getLongsFromInput();
 
         Collections.sort(longList);
         int totalNumbers = longList.size();
@@ -107,5 +116,15 @@ public class Main {
 
         System.out.printf("Total numbers: %d.\n" +
                 "The greatest number: %d (%d time(s)).", totalNumbers, greatestNumber, time);
+    }
+
+    @NotNull
+    private static List<Long> getLongsFromInput() {
+        List<Long> longList = new ArrayList<>();
+        while (scanner.hasNextLong()) {
+            long number = scanner.nextLong();
+            longList.add(number);
+        }
+        return longList;
     }
 }

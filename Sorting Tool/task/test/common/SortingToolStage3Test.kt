@@ -7,18 +7,25 @@ import org.hyperskill.hstest.testing.Settings
 import java.util.*
 import kotlin.math.roundToInt
 
-class SortingToolStage2Test : StageTest<SortingToolClue>() {
+class SortingToolStage3Test : StageTest<SortingToolClue>() {
 
     init {
         Settings.allowOutOfInput = true
     }
 
     override fun generate(): List<TestCase<SortingToolClue>> {
-        return stage1Tests() + stage2Tests()
+        return stage1Tests() + stage2Tests() + stage3Tests()
     }
 
     override fun check(reply: String, clue: SortingToolClue): CheckResult {
         return when {
+            "-sortIntegers" in clue.args -> checkNatural(
+                    parseLongTokens(clue.consoleInput),
+                    ::parseLongTokens,
+                    clue,
+                    reply
+            )
+
             "long" in clue.args -> checkForLong(clue, reply)
             "word" in clue.args -> checkForWord(clue, reply)
             "line" in clue.args -> checkForLine(clue, reply)
@@ -42,6 +49,7 @@ fun stage1Tests(): List<TestCase<SortingToolClue>> {
             createTest("1 1 2 2 3 4 4 4", false)
     )
 }
+
 
 fun stage2Tests(): List<TestCase<SortingToolClue>> {
     return listOf(
@@ -82,13 +90,46 @@ fun stage2Tests(): List<TestCase<SortingToolClue>> {
 }
 
 
+fun stage3Tests(): List<TestCase<SortingToolClue>> {
+    return listOf(
+            createTest(
+                    """
+                |1 -2   333 4
+                |42
+                |1                 1
+                """.trimMargin(),
+                    true,
+                    "-dataType", "word", "-sortIntegers"
+            ),
+            createTest(
+                    """
+                |1 -2   333 4
+                |42
+                |1                 1
+                """.trimMargin(),
+                    true,
+                    "-sortIntegers"
+            ),
+            createTest(
+                    """
+                |1111
+                |22222
+                |3
+                |44
+                """.trimMargin(),
+                    false,
+                    "-sortIntegers", "-dataType", "line"
+            )
+    )
+}
+
+
+
 fun revealRawTest(clue: SortingToolClue, reply: String): String {
     return with(clue) { "Args:\n${args.joinToString(" ")}\nInput:\n$consoleInput\nYour output:\n$reply\n\n" }
 }
 
-
 class SortingToolClue(val consoleInput: String, val revealTest: Boolean, val args: List<String>)
-
 
 fun createTest(
         consoleInput: String,
@@ -100,7 +141,6 @@ fun createTest(
             .setInput(consoleInput)
             .addArguments(*args)
 }
-
 
 fun checkForLong(clue: SortingToolClue, reply_: String): CheckResult {
     val reply = reply_.trim()
@@ -172,7 +212,6 @@ fun checkForLong(clue: SortingToolClue, reply_: String): CheckResult {
 
     return CheckResult(true)
 }
-
 
 fun checkForWord(clue: SortingToolClue, reply_: String): CheckResult {
     val reply = reply_.trim()
@@ -261,7 +300,6 @@ fun checkForWord(clue: SortingToolClue, reply_: String): CheckResult {
 
     return CheckResult(true)
 }
-
 
 fun checkForLine(clue: SortingToolClue, reply_: String): CheckResult {
     val reply = reply_.trim()
@@ -368,6 +406,102 @@ fun checkForLine(clue: SortingToolClue, reply_: String): CheckResult {
             )
         } else {
             CheckResult(false, "Percentage is incorrect.")
+        }
+    }
+
+    return CheckResult(true)
+}
+
+fun parseLongTokens(input: String): List<Int> {
+    val scanner = Scanner(input)
+
+    val longTokens = mutableListOf<Int>()
+
+    while (scanner.hasNextInt()) {
+        longTokens.add(scanner.nextInt())
+    }
+
+    return longTokens
+}
+
+fun <TokenType : Comparable<TokenType>> checkNatural(
+        actualTokens: List<TokenType>,
+        sortedTokensParser: (String) -> List<TokenType>,
+        clue: SortingToolClue,
+        reply_: String
+): CheckResult {
+    val reply = reply_.trim()
+    val lines = reply.lines()
+
+    if (lines.size != 2) {
+        return if (clue.revealTest) {
+            CheckResult(
+                    false,
+                    "Can't parse your output: expected 2 lines.\n" +
+                            revealRawTest(clue, reply)
+            )
+        } else {
+            CheckResult(false, "Can't parse your output: expected 2 lines.")
+        }
+    }
+
+    val totalRegex = """(\d+)""".toRegex()
+    val totalMatchResult = totalRegex.find(lines[0])
+    if (totalMatchResult == null) {
+        return if (clue.revealTest) {
+            CheckResult(
+                    false,
+                    "Can't find number in the first line of your output.\n" +
+                            revealRawTest(clue, reply)
+            )
+        } else {
+            CheckResult(false, "Can't find number in the first line of your output.")
+        }
+    }
+
+    val totalTokens = totalMatchResult.groupValues[1].toInt()
+
+    val actualTotal = actualTokens.size
+
+    if (actualTotal != totalTokens) {
+        return if (clue.revealTest) {
+            CheckResult(
+                    false,
+                    "Total tokens ($totalTokens) are incorrect. Expected: $actualTotal.\n" +
+                            revealRawTest(clue, reply)
+            )
+        } else {
+            CheckResult(false, "Total tokens are incorrect.")
+        }
+    }
+
+    val sortedActualTokens = actualTokens.sorted()
+
+    val sortedTokens = sortedTokensParser(lines[1].substringAfter(":").dropWhile { it in setOf('\n', '\r') })
+
+    val total = sortedTokens.size
+
+    if (actualTotal != total) {
+        return if (clue.revealTest) {
+            CheckResult(
+                    false,
+                    "Total sorted tokens ($total) are incorrect. Expected: $actualTotal.\n" +
+                            revealRawTest(clue, reply)
+            )
+        } else {
+            CheckResult(false, "Total sorted tokens are incorrect.")
+        }
+    }
+
+    if (sortedActualTokens != sortedTokens) {
+        return if (clue.revealTest) {
+            CheckResult(
+                    false,
+                    "Sorted tokens are incorrect.\n" +
+                            revealRawTest(clue, reply)
+            )
+        } else {
+            CheckResult(false, "Sorted tokens are incorrect.")
         }
     }
 

@@ -7,8 +7,8 @@
 /Sorting Tool/Not just numbers/
 /Sorting Tool/Everything counts/
 /Sorting Tool/Error_/
-*.yaml
-*.html
-*.class
+**.yaml
+**.html
+**.class
 /gradlew.bat
 /gradlew

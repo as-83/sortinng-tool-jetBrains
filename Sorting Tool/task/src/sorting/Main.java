@@ -10,24 +10,48 @@ public class Main {
         //Command-line arguments parsing
         String dataType = "word";
         String sortingType = "natural";
+        try {
+            if (args.length > 0) {
+                List<String> arguments = Arrays.asList(args);
+                if (arguments.contains("-sortingType")) {
+                    int index = arguments.indexOf("-sortingType");
+                    boolean sortingTypeArgNotValid = (arguments.size() ==index + 1) ||
+                            ((!arguments.get(index + 1).equals("natural"))
+                                    && (!arguments.get(index + 1).equals("byCount")));
+                    if (sortingTypeArgNotValid) {
+                        throw new IllegalArgumentException("No sorting type defined!");
+                    }
+                    sortingType = arguments.get(index + 1);
+                }
+                if (arguments.contains("-dataType")) {
+                    int index = arguments.indexOf("-dataType");
+                    boolean dataTypeArgNotValid = arguments.size() ==index + 1;
+                    if (dataTypeArgNotValid) {
+                        throw new IllegalArgumentException("No data type defined!");
+                    }
 
-        if (args.length > 0) {
-            List<String> arguments = Arrays.asList(args);
-            if (arguments.contains("-sortingType")) {
-                int index = arguments.indexOf("-sortingType");
-                sortingType = args[index + 1];
-            }
-            if (arguments.contains( "-dataType")) {
-                int index = arguments.indexOf("-dataType");
-                dataType = args[index + 1];
-            }
-        }
+                    dataType =  arguments.get(index + 1);
+                }
 
-        switch (dataType) {
-            case "long": longParser(sortingType); break;
-            case "word": wordParser(sortingType); break;
-            case "line": lineParser(sortingType); break;
-            default: break;
+                arguments.stream().filter(s -> !s.equals("-dataType") && !s.equals("-sortingType") && s.startsWith("-"))
+                        .forEach(s -> System.out.println("\"" + s + "\" is not a valid parameter. It will be skipped."));
+            }
+
+            switch (dataType) {
+                case "long":
+                    longParser(sortingType);
+                    break;
+                case "word":
+                    wordParser(sortingType);
+                    break;
+                case "line":
+                    lineParser(sortingType);
+                    break;
+                default:
+                    throw new IllegalArgumentException("No data type defined!");
+            }
+        } catch (IllegalArgumentException exception) {
+            System.out.println(exception.getMessage());
         }
 
         //intSortByCount(Arrays.asList(1L, 2L, 2L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 9L, 5L));// Method test

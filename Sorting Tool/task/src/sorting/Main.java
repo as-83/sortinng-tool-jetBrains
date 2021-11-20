@@ -1,11 +1,16 @@
 package sorting;
 
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
     private static Scanner scanner = new Scanner(System.in);
+    private static  String outputFile;
+    private static boolean writeToFile;
+
     public static void main(final String[] args) {
         //Command-line arguments parsing
         String dataType = "word";
@@ -23,6 +28,19 @@ public class Main {
                     }
                     sortingType = arguments.get(index + 1);
                 }
+
+                if (arguments.contains("-inputFile")) {
+                    int index = arguments.indexOf("-inputFile");
+                    String inputFile = arguments.get(index + 1);
+                    scanner = new Scanner(inputFile);
+                }
+
+                if (arguments.contains("-outputFile")) {
+                    int index = arguments.indexOf("-outputFile");
+                    outputFile = arguments.get(index + 1);
+                    writeToFile = true;
+                }
+
                 if (arguments.contains("-dataType")) {
                     int index = arguments.indexOf("-dataType");
                     boolean dataTypeArgNotValid = arguments.size() ==index + 1;
@@ -66,17 +84,36 @@ public class Main {
             lines.add(line);
         }
         int totalLines = lines.size();
-        System.out.printf("Total lines: %d.\n", totalLines);
+        // System.out.printf("Total lines: %d.\n", totalLines);
+        StringBuilder stringBuilder = new StringBuilder(String.format("Total lines: %d.\n", totalLines));
 
         if (sortingType.equals("natural")) {
-            stringsNaturalSorting(lines);
-            System.out.println("Sorted data:");
-            lines.forEach(s -> System.out.println(s));
-        } else {
-            wordsSortingByCount(lines);
-        }
 
-        stringsNaturalSorting(lines);
+            stringsNaturalSorting(lines);
+            //System.out.println("Sorted data:");
+            stringBuilder.append("Sorted data:\n");
+            //lines.forEach(s -> System.out.println(s));
+            lines.forEach(s -> stringBuilder.append(s + "\n"));
+
+        } else {
+            stringBuilder.append(wordsSortingByCount(lines));
+        }
+        printResult(stringBuilder.toString());
+
+       // stringsNaturalSorting(lines);
+    }
+
+    private static void printResult(String output) {
+        if (writeToFile) {
+            try (PrintWriter printWriter = new PrintWriter(outputFile);){
+                printWriter.println(output);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            System.out.println(output);
+        }
     }
 
     private static void wordParser(String sortingType) {
@@ -90,25 +127,35 @@ public class Main {
         }
 
         int totalLines = words.size();
-        System.out.printf("Total words: %d.\n", totalLines);
+        //System.out.printf("Total words: %d.\n", totalLines);
+        StringBuilder stringBuilder = new StringBuilder(String.format("Total words: %d.\n", totalLines));
+
 
         if (sortingType.equals("natural")) {
             stringsNaturalSorting(words);
-            System.out.print("Sorted data:");
-            words.forEach(s -> System.out.print(" " + s));
+            //System.out.print("Sorted data:");
+            stringBuilder.append("Sorted data:");
+            //words.forEach(s -> System.out.print(" " + s));
+            words.forEach(s -> stringBuilder.append(" " + s));
+
         } else {
-            wordsSortingByCount(words);
+            stringBuilder.append(wordsSortingByCount(words));
         }
+        printResult(stringBuilder.toString());
 
     }
 
-    private static void wordsSortingByCount(List<String> words) {
+    private static String wordsSortingByCount(List<String> words) {
+        StringBuilder stringBuilder = new StringBuilder();
 
-        Map<String, Long> map =  words.stream().collect(Collectors.groupingBy(String::valueOf, Collectors.counting()));
-                map.entrySet().stream()
+         words.stream().collect(Collectors.groupingBy(String::valueOf, Collectors.counting()))
+                .entrySet().stream()
                         .sorted(Map.Entry.<String, Long>comparingByValue().thenComparing(Map.Entry.comparingByKey()))
-                        .forEach((m) -> System.out.println(m.getKey() + ": " + m.getValue() +
-                        " time(s), " + Math.round(m.getValue() * 100.0 / words.size()) + "%"));
+                        /*.forEach((m) -> System.out.println(m.getKey() + ": " + m.getValue() +
+                        " time(s), " + Math.round(m.getValue() * 100.0 / words.size()) + "%"));*/
+                 .forEach((m) -> stringBuilder.append(m.getKey() + ": " + m.getValue() +
+                         " time(s), " + Math.round(m.getValue() * 100.0 / words.size()) + "%\n"));
+                 return stringBuilder.toString();
     }
 
     private static void stringsNaturalSorting(List<String> words) {
@@ -125,13 +172,24 @@ public class Main {
     private static void longParser(String sortingType) {
         List<Long> longList = getLongsFromInput();
         int totalNumbers = longList.size();
-        System.out.printf("Total numbers: %d.\n", totalNumbers);
+        //System.out.printf("Total numbers: %d.\n", totalNumbers);
+        StringBuilder stringBuilder = new StringBuilder(String.format("Total numbers: %d.\n", totalNumbers));
 
         if (sortingType.equals("natural")) {
-            intNaturalSort(longList);
+            //intNaturalSort(longList);
+            Collections.sort(longList);
+            //System.out.print("Sorted data:");
+            stringBuilder.append("Sorted data:");
+            longList.forEach(s -> stringBuilder.append(" " + s));
         } else {
-            intSortByCount(longList);
+            //intSortByCount(longList);
+            longList.stream().collect(Collectors.groupingBy(Long::longValue ,Collectors.counting()))
+                    .entrySet().stream()
+                    .sorted(Map.Entry.<Long, Long>comparingByValue().thenComparing(Map.Entry.comparingByKey()))
+                    .forEach((entry) -> stringBuilder.append(entry.getKey() + ": " + entry.getValue() +
+                            " time(s), " + Math.round(entry.getValue() * 100.0 / longList.size()) + "%\n"));
         }
+        printResult(stringBuilder.toString());
 
 
     }
